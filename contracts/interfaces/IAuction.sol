@@ -2,7 +2,7 @@ pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {
-    IToken
+    ISuperToken
 } from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 
 import {
@@ -16,16 +16,8 @@ interface  IAuction {
     event Winner(address indexed account);
     event AuctionClosed();
 
-    struct ViewBidder {
-        address account;
-        uint256 timeToWin;
-        int96 flowRate;
-        uint256 balance;
-        address nextAccount;
-    }
-
     function _cfa() external view returns (IConstantFlowAgreementV1);
-    function _superToken() external view returns(IToken);
+    function _superToken() external view returns(ISuperToken);
     function step() external view returns(int96);
     function winner() external view returns(address);
     function isFinish() external view returns(bool);

@@ -3,9 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import {
     ISuperfluid,
-    IToken,
-    IAgreement,
-    AppDefinitions
+    ISuperToken,
+    ISuperAgreement,
+    SuperAppDefinitions
 } from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 
 import {
@@ -13,8 +13,8 @@ import {
 } from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 
 import {
-    AppBase
-} from "@superfluid-finance/ethereum-contracts/contracts/apps/AppBase.sol";
+    SuperAppBase
+} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBase.sol";
 
 import {
     IAuction
@@ -25,7 +25,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import "@superfluid-finance/ethereum-contracts/contracts/utils/Int96SafeMath.sol";
 
-contract Auction is Ownable, AppBase, IAuction {
+contract Auction is Ownable, SuperAppBase, IAuction {
 
     using Int96SafeMath for int96;
     using SafeMath for uint256;
@@ -50,12 +50,12 @@ contract Auction is Ownable, AppBase, IAuction {
 
     ISuperfluid private _host;
     IConstantFlowAgreementV1 public immutable override _cfa;
-    IToken public immutable override _superToken;
+    ISuperToken public immutable override _superToken;
 
     constructor(
         ISuperfluid host,
         IConstantFlowAgreementV1 cfa,
-        IToken superToken,
+        ISuperToken superToken,
         address nft,
         uint256 _tokenId,
         uint256 winnerTime,
@@ -78,10 +78,10 @@ contract Auction is Ownable, AppBase, IAuction {
         step = stepBid + 100;
 
         uint256 configWord =
-            AppDefinitions.APP_LEVEL_FINAL |
-            AppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
-            AppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
-            AppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
+            SuperAppDefinitions.APP_LEVEL_FINAL |
+            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
+            SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
+            SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
 
         if(bytes(registrationKey).length > 0) {
             _host.registerAppWithKey(configWord, registrationKey);
@@ -436,7 +436,7 @@ contract Auction is Ownable, AppBase, IAuction {
      *************************************************************************/
 
     function afterAgreementCreated(
-        IToken superToken,
+        ISuperToken superToken,
         address agreementClass,
         bytes32 /*agreementId*/,
         bytes calldata /*agreementData*/,
@@ -456,7 +456,7 @@ contract Auction is Ownable, AppBase, IAuction {
     }
 
     function afterAgreementUpdated(
-        IToken superToken,
+        ISuperToken superToken,
         address agreementClass,
         bytes32 /*agreementId*/,
         bytes calldata /*agreementData*/,
@@ -476,7 +476,7 @@ contract Auction is Ownable, AppBase, IAuction {
     }
 
     function afterAgreementTerminated(
-        IToken superToken,
+        ISuperToken superToken,
         address agreementClass,
         bytes32 /*agreementId*/,
         bytes calldata agreementData,
@@ -494,12 +494,12 @@ contract Auction is Ownable, AppBase, IAuction {
         }
     }
 
-    function _isSameToken(IToken superToken) private view returns (bool) {
+    function _isSameToken(ISuperToken superToken) private view returns (bool) {
         return address(superToken) == address(_superToken);
     }
 
     function _isCFAv1(address agreementClass) private view returns (bool) {
-        return IAgreement(agreementClass).agreementType()
+        return ISuperAgreement(agreementClass).agreementType()
         == keccak256("org.superfluid-finance.agreements.ConstantFlowAgreement.v1");
     }
 
@@ -514,7 +514,7 @@ contract Auction is Ownable, AppBase, IAuction {
         _;
     }
 
-    modifier onlyExpected(IToken superToken, address agreementClass) {
+    modifier onlyExpected(ISuperToken superToken, address agreementClass) {
         require(_isSameToken(superToken), "Auction: not accepted token");
         require(_isCFAv1(agreementClass), "Auction: only CFAv1 supported");
         _;
